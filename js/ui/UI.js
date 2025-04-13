@@ -6,7 +6,9 @@ class UI {
         this.isGameStarted = false;
         this.lastEquipTime = 0; // Add cooldown tracking
         this.equipCooldown = 500; // 500ms cooldown between equips
+        this.tooltip = null;
         this.createInventoryUI();
+        this.createTooltip();
     }
 
     initialize() {
@@ -159,6 +161,81 @@ class UI {
         }
     }
 
+    createTooltip() {
+        this.tooltip = document.createElement('div');
+        this.tooltip.className = 'tooltip';
+        document.body.appendChild(this.tooltip);
+
+        // Add mousemove event listener to update tooltip position
+        document.addEventListener('mousemove', (e) => {
+            if (this.tooltip.classList.contains('visible')) {
+                const x = e.clientX + 15;
+                const y = e.clientY + 15;
+                
+                // Keep tooltip within viewport
+                const tooltipRect = this.tooltip.getBoundingClientRect();
+                const maxX = window.innerWidth - tooltipRect.width - 10;
+                const maxY = window.innerHeight - tooltipRect.height - 10;
+                
+                this.tooltip.style.left = `${Math.min(x, maxX)}px`;
+                this.tooltip.style.top = `${Math.min(y, maxY)}px`;
+            }
+        });
+    }
+
+    showTooltip(item, event) {
+        if (!item) return;
+        
+        this.tooltip.innerHTML = `
+            <div class="tooltip-header">
+                <div class="tooltip-name">${item.name}</div>
+                <div class="tooltip-type">${item.type}</div>
+            </div>
+            <div class="tooltip-stats">
+                ${this.getItemStats(item)}
+            </div>
+        `;
+        
+        this.tooltip.classList.add('visible');
+        
+        // Initial position
+        const x = event.clientX + 15;
+        const y = event.clientY + 15;
+        this.tooltip.style.left = `${x}px`;
+        this.tooltip.style.top = `${y}px`;
+    }
+
+    hideTooltip() {
+        this.tooltip.classList.remove('visible');
+    }
+
+    getItemStats(item) {
+        let stats = '';
+        
+        if (item.defense !== undefined) {
+            stats += `<div class="tooltip-stat">
+                <span>Defense</span>
+                <span class="tooltip-stat-value">+${item.defense}</span>
+            </div>`;
+        }
+        
+        if (item.attack !== undefined) {
+            stats += `<div class="tooltip-stat">
+                <span>Attack</span>
+                <span class="tooltip-stat-value">+${item.attack}</span>
+            </div>`;
+        }
+        
+        if (item.speed !== undefined) {
+            stats += `<div class="tooltip-stat">
+                <span>Speed</span>
+                <span class="tooltip-stat-value">+${item.speed}</span>
+            </div>`;
+        }
+        
+        return stats || '<div class="tooltip-stat">No additional stats</div>';
+    }
+
     updateInventory() {
         if (!window.game || !window.game.player) return;
         
@@ -185,19 +262,17 @@ class UI {
                     </div>
                 `;
                 
+                const itemElement = slot.querySelector('.item');
+                
+                // Add tooltip events
+                itemElement.addEventListener('mouseenter', (e) => this.showTooltip(item, e));
+                itemElement.addEventListener('mouseleave', () => this.hideTooltip());
+                
                 if (item.isEquippable) {
-                    const itemElement = slot.querySelector('.item');
                     itemElement.addEventListener('click', () => {
-                        // Check if item is already equipped
-                        const equippedItem = player.equipment.get(item.slot);
-                        if (equippedItem && equippedItem.id === item.id) {
-                            return; // Skip if this exact item is already equipped
-                        }
-                        
-                        // Check cooldown
                         const currentTime = Date.now();
                         if (currentTime - this.lastEquipTime < this.equipCooldown) {
-                            return; // Skip if cooldown hasn't elapsed
+                            return;
                         }
                         this.lastEquipTime = currentTime;
                         
@@ -239,10 +314,15 @@ class UI {
                 `;
                 
                 const itemElement = slotIcon.querySelector('.item');
+                
+                // Add tooltip events
+                itemElement.addEventListener('mouseenter', (e) => this.showTooltip(equippedItem, e));
+                itemElement.addEventListener('mouseleave', () => this.hideTooltip());
+                
                 itemElement.addEventListener('click', () => {
                     const currentTime = Date.now();
                     if (currentTime - this.lastEquipTime < this.equipCooldown) {
-                        return; // Skip if cooldown hasn't elapsed
+                        return;
                     }
                     this.lastEquipTime = currentTime;
                     
