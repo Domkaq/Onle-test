@@ -235,6 +235,14 @@ class Game {
         const otherPlayer = new Player(playerName, skinColor);
         this.otherPlayers.set(playerId, otherPlayer);
         this.scene.add(otherPlayer.mesh);
+
+        // Ha Sinka csatlakozik, azonnal legyen rajta a szalmakalap
+        if (playerName === 'Sinka') {
+            const strawHat = Equipment.createItem('helmet', 'Straw Hat', Equipment.SLOTS.HEAD);
+            if (strawHat) {
+                otherPlayer.equipItem(strawHat);
+            }
+        }
     }
 
     removeOtherPlayer(playerId) {
