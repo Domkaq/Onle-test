@@ -14,6 +14,67 @@ class Player {
         this.inventory = new Inventory();
         this.equipment = new Map();
         this.equipmentMeshes = new Map(); // Store equipment meshes separately
+
+        // Add test equipment
+        this.inventory.addItem({
+            id: 'helmet-1',
+            name: 'Reinforced Scout Helmet',
+            type: 'helmet',
+            slot: 'head',
+            rarity: 'common',
+            defense: 5,
+            speed: 1,
+            description: 'A lightweight but sturdy helmet favored by scouts. Provides good visibility while maintaining decent protection.',
+            isEquippable: true
+        });
+
+        this.inventory.addItem({
+            id: 'chest-1',
+            name: 'Powered Combat Vest',
+            type: 'chest',
+            slot: 'chest',
+            rarity: 'common',
+            defense: 8,
+            speed: -1,
+            description: 'Standard-issue combat armor with an integrated power core for enhanced protection.',
+            isEquippable: true
+        });
+
+        this.inventory.addItem({
+            id: 'hands-1',
+            name: 'Tactical Combat Gloves',
+            type: 'hands',
+            slot: 'hands',
+            rarity: 'common',
+            defense: 3,
+            attack: 2,
+            description: 'Reinforced combat gloves with power-assisted grip enhancement.',
+            isEquippable: true
+        });
+
+        this.inventory.addItem({
+            id: 'legs-1',
+            name: 'Assault Leg Guards',
+            type: 'legs',
+            slot: 'legs',
+            rarity: 'common',
+            defense: 6,
+            speed: 2,
+            description: 'Lightweight leg armor with integrated movement assist systems.',
+            isEquippable: true
+        });
+
+        this.inventory.addItem({
+            id: 'feet-1',
+            name: 'Tactical Combat Boots',
+            type: 'feet',
+            slot: 'feet',
+            rarity: 'common',
+            defense: 4,
+            speed: 3,
+            description: 'Advanced combat boots with shock absorption and enhanced mobility.',
+            isEquippable: true
+        });
     }
 
     createMesh() {
@@ -48,6 +109,11 @@ class Player {
         head.scale.set(1, 0.9, 1); // Slightly squish for cuteness
         head.castShadow = true;
         group.add(head);
+
+        // Create equipment container
+        const equipmentContainer = new THREE.Group();
+        equipmentContainer.name = 'equipmentContainer';
+        group.add(equipmentContainer);
 
         // Create eyes (more expressive)
         const eyeGeometry = new THREE.SphereGeometry(0.05, 32, 32);
@@ -326,7 +392,18 @@ class Player {
                 case 'helmet':
                     item.model = Equipment.createHelmet();
                     break;
-                // Add more cases for other equipment types here
+                case 'chest':
+                    item.model = Equipment.createChest();
+                    break;
+                case 'hands':
+                    item.model = Equipment.createHands();
+                    break;
+                case 'legs':
+                    item.model = Equipment.createLegs();
+                    break;
+                case 'feet':
+                    item.model = Equipment.createFeet();
+                    break;
             }
         }
 
@@ -336,7 +413,10 @@ class Player {
                 const oldEquipment = this.equipment.get(item.slot);
                 const oldMesh = this.equipmentMeshes.get(item.slot);
                 if (oldMesh) {
-                    this.mesh.remove(oldMesh);
+                    const equipmentContainer = this.mesh.getObjectByName('equipmentContainer');
+                    if (equipmentContainer) {
+                        equipmentContainer.remove(oldMesh);
+                    }
                 }
                 this.equipment.delete(item.slot);
                 this.equipmentMeshes.delete(item.slot);
@@ -345,28 +425,39 @@ class Player {
             // Add new equipment
             const equipmentModel = item.model.clone();
             this.equipment.set(item.slot, item);
-            this.equipmentMeshes.set(item.slot, equipmentModel);
+
+            // Create a new group for the equipment
+            const equipmentGroup = new THREE.Group();
+            equipmentGroup.name = `equipment_${item.slot}`;
             
-            // Position equipment based on slot
-            switch (item.slot) {
-                case Equipment.SLOTS.HEAD:
-                    equipmentModel.position.y = 1.3;
-                    break;
-                case Equipment.SLOTS.CHEST:
-                    equipmentModel.position.y = 0.7;
-                    break;
-                case Equipment.SLOTS.HANDS:
-                    equipmentModel.position.y = 0.7;
-                    break;
-                case Equipment.SLOTS.LEGS:
-                    equipmentModel.position.y = 0.4;
-                    break;
-                case Equipment.SLOTS.FEET:
-                    equipmentModel.position.y = 0.1;
-                    break;
+            // Reset model position within its group
+            equipmentModel.position.set(0, 0, 0);
+            equipmentGroup.add(equipmentModel);
+
+            // Base positions for equipment relative to character body
+            const positions = {
+                [Equipment.SLOTS.HEAD]: { y: 1.3 },    // Align with head
+                [Equipment.SLOTS.CHEST]: { y: 0.7 },   // Upper body
+                [Equipment.SLOTS.HANDS]: { y: 0.6 },   // Just below chest
+                [Equipment.SLOTS.LEGS]: { y: 0.4 },    // Lower body
+                [Equipment.SLOTS.FEET]: { y: 0.15 }    // Near ground
+            };
+
+            // Set the group's position
+            const pos = positions[item.slot];
+            if (pos) {
+                equipmentGroup.position.y = pos.y;
             }
-            
-            this.mesh.add(equipmentModel);
+
+            // Store the group
+            this.equipmentMeshes.set(item.slot, equipmentGroup);
+
+            // Add to equipment container
+            const equipmentContainer = this.mesh.getObjectByName('equipmentContainer');
+            if (equipmentContainer) {
+                equipmentContainer.add(equipmentGroup);
+            }
+
             return true;
         }
         return false;
@@ -374,10 +465,16 @@ class Player {
 
     unequipItem(itemId) {
         const item = this.inventory.items.get(itemId);
-        if (item) {
-            const equipmentMesh = this.equipmentMeshes.get(item.slot);
-            if (equipmentMesh) {
-                this.mesh.remove(equipmentMesh);
+        if (item && this.equipment.has(item.slot)) {
+            const equipmentGroup = this.equipmentMeshes.get(item.slot);
+            if (equipmentGroup) {
+                // Remove from equipment container
+                const equipmentContainer = this.mesh.getObjectByName('equipmentContainer');
+                if (equipmentContainer) {
+                    equipmentContainer.remove(equipmentGroup);
+                }
+                
+                // Clean up maps
                 this.equipment.delete(item.slot);
                 this.equipmentMeshes.delete(item.slot);
                 this.inventory.unequipItem(itemId);
