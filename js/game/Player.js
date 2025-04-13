@@ -9,6 +9,11 @@ class Player {
         this.gravity = 0.01;
         this.verticalVelocity = 0;
         this.isJumping = false;
+        
+        // Add inventory and equipment
+        this.inventory = new Inventory();
+        this.equipment = new Map();
+        this.equipmentMeshes = new Map(); // Store equipment meshes separately
     }
 
     createMesh() {
@@ -312,6 +317,78 @@ class Player {
         }
 
         return moved;
+    }
+
+    equipItem(item) {
+        // If the item comes from network and doesn't have a model, create it
+        if (!item.model) {
+            switch(item.type) {
+                case 'helmet':
+                    item.model = Equipment.createHelmet();
+                    break;
+                // Add more cases for other equipment types here
+            }
+        }
+
+        if (this.inventory.equipItem(item.id)) {
+            // Remove existing equipment in the same slot
+            if (this.equipment.has(item.slot)) {
+                const oldEquipment = this.equipment.get(item.slot);
+                const oldMesh = this.equipmentMeshes.get(item.slot);
+                if (oldMesh) {
+                    this.mesh.remove(oldMesh);
+                }
+                this.equipment.delete(item.slot);
+                this.equipmentMeshes.delete(item.slot);
+            }
+            
+            // Add new equipment
+            const equipmentModel = item.model.clone();
+            this.equipment.set(item.slot, item);
+            this.equipmentMeshes.set(item.slot, equipmentModel);
+            
+            // Position equipment based on slot
+            switch (item.slot) {
+                case Equipment.SLOTS.HEAD:
+                    equipmentModel.position.y = 1.3;
+                    break;
+                case Equipment.SLOTS.CHEST:
+                    equipmentModel.position.y = 0.7;
+                    break;
+                case Equipment.SLOTS.HANDS:
+                    equipmentModel.position.y = 0.7;
+                    break;
+                case Equipment.SLOTS.LEGS:
+                    equipmentModel.position.y = 0.4;
+                    break;
+                case Equipment.SLOTS.FEET:
+                    equipmentModel.position.y = 0.1;
+                    break;
+            }
+            
+            this.mesh.add(equipmentModel);
+            return true;
+        }
+        return false;
+    }
+
+    unequipItem(itemId) {
+        const item = this.inventory.items.get(itemId);
+        if (item) {
+            const equipmentMesh = this.equipmentMeshes.get(item.slot);
+            if (equipmentMesh) {
+                this.mesh.remove(equipmentMesh);
+                this.equipment.delete(item.slot);
+                this.equipmentMeshes.delete(item.slot);
+                this.inventory.unequipItem(itemId);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    getEquippedItems() {
+        return Array.from(this.equipment.values());
     }
 }
 

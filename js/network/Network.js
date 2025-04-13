@@ -17,27 +17,61 @@ class Network {
             console.log('Connected to server');
         });
 
+        // Handle equipment updates
+        this.socket.on('player-equipment', (data) => {
+            console.log('Received equipment update:', data);
+            const otherPlayer = window.game.otherPlayers.get(data.id);
+            if (otherPlayer) {
+                if (data.action === 'equip' && data.item) {
+                    console.log('Equipping item for other player:', data.item);
+                    otherPlayer.inventory.addItem(data.item);
+                    otherPlayer.equipItem(data.item);
+                } else if (data.action === 'unequip' && data.itemId) {
+                    console.log('Unequipping item for other player:', data.itemId);
+                    otherPlayer.unequipItem(data.itemId);
+                }
+            }
+        });
+
         // Handle initial player list
         this.socket.on('player-list', (players) => {
+            console.log('Received player list:', players);
             players.forEach(player => {
                 if (player.id !== this.socket.id) {
                     window.game.addOtherPlayer(player.id, player.name, player.skinColor);
                     if (player.position) {
                         window.game.updateOtherPlayer(player.id, player.position);
                     }
+                    // Add equipped items
+                    if (player.equipment && player.equipment.length > 0) {
+                        console.log('Adding equipment for player:', player.id, player.equipment);
+                        const otherPlayer = window.game.otherPlayers.get(player.id);
+                        player.equipment.forEach(item => {
+                            otherPlayer.inventory.addItem(item);
+                            otherPlayer.equipItem(item);
+                        });
+                    }
                 }
             });
-            // Update player count
             this.updatePlayerCount(players.length);
         });
 
         // Handle new player joining
         this.socket.on('player-joined', (player) => {
+            console.log('Player joined with data:', player);
             window.game.addOtherPlayer(player.id, player.name, player.skinColor);
             if (player.position) {
                 window.game.updateOtherPlayer(player.id, player.position);
             }
-            // Update player count
+            // Add equipped items
+            if (player.equipment && player.equipment.length > 0) {
+                console.log('Adding equipment for new player:', player.id, player.equipment);
+                const otherPlayer = window.game.otherPlayers.get(player.id);
+                player.equipment.forEach(item => {
+                    otherPlayer.inventory.addItem(item);
+                    otherPlayer.equipItem(item);
+                });
+            }
             this.updatePlayerCount(this.getPlayerCount() + 1);
         });
 
@@ -67,10 +101,16 @@ class Network {
             rotation: window.game.player.mesh.rotation.y
         };
 
+        // Get equipped items and serialize them for network
+        const equippedItems = Array.from(window.game.player.inventory.equippedItems.values())
+            .map(item => Equipment.serializeForNetwork(item));
+        console.log('Connecting with equipped items:', equippedItems);
+
         this.socket.emit('player-join', {
             name: playerName,
             skinColor: skinColor,
-            position: initialPosition
+            position: initialPosition,
+            equipment: equippedItems
         });
     }
 
@@ -96,6 +136,17 @@ class Network {
         const playerCountElement = document.getElementById('player-count');
         if (playerCountElement) {
             playerCountElement.textContent = count;
+        }
+    }
+
+    updateEquipment(action, item) {
+        if (this.socket) {
+            console.log('Sending equipment update:', action, item);
+            this.socket.emit('player-equipment', {
+                action,
+                item: action === 'equip' ? Equipment.serializeForNetwork(item) : undefined,
+                itemId: item.id
+            });
         }
     }
 }

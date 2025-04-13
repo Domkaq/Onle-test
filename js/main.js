@@ -29,6 +29,10 @@ class Main {
             this.game.player = new Player(playerName, skinColor);
             this.game.scene.add(this.game.player.mesh);
 
+            // Add test helmet to inventory
+            const helmet = Equipment.createHelmetItem();
+            this.game.player.inventory.addItem(helmet);
+
             // Connect to server
             this.network.connect(playerName, skinColor);
         });

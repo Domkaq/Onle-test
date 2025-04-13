@@ -151,23 +151,310 @@ button:active {
     font-size: 0.9rem;
 }
 
+/* Inventory Styles */
+.inventory {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 1px solid rgba(0, 184, 148, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                0 0 10px rgba(0, 184, 148, 0.1);
+    width: 800px;
+    max-width: 90vw;
+    z-index: 1000;
+    color: #ffffff;
+    padding: 1rem;
+}
+
+.inventory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 184, 148, 0.2);
+}
+
+.inventory-header h2 {
+    font-size: 1.25rem;
+    margin: 0;
+    color: #00b894;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+.inventory-close {
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.inventory-close:hover {
+    opacity: 1;
+    color: #00b894;
+    background: rgba(0, 184, 148, 0.1);
+}
+
+.inventory-content {
+    display: flex;
+    gap: 1rem;
+    height: 500px;
+    max-height: 70vh;
+}
+
+.equipment-section {
+    flex: 0 0 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.equipment-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.equipment-slot {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 184, 148, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 48px;
+    position: relative;
+}
+
+.equipment-slot:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(0, 184, 148, 0.3);
+}
+
+.equipment-slot.equipped {
+    border-color: #00b894;
+    background: rgba(0, 184, 148, 0.1);
+}
+
+.equipment-slot .item {
+    position: static;
+    inset: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.equipment-slot .item-name {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: left;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.equipment-slot .item-icon {
+    min-width: 32px;
+    width: 32px;
+    height: 32px;
+}
+
+.character-preview {
+    flex-grow: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 184, 148, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.character-model {
+    width: 180px;
+    height: 180px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    border: 1px solid rgba(0, 184, 148, 0.1);
+}
+
+.inventory-section {
+    flex-grow: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 184, 148, 0.1);
+    padding: 0.75rem;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.inventory-slot {
+    aspect-ratio: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 184, 148, 0.1);
+    border-radius: 6px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.inventory-slot:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(0, 184, 148, 0.3);
+}
+
+.slot-highlight {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.inventory-slot:hover .slot-highlight {
+    box-shadow: inset 0 0 0 1px #00b894;
+}
+
+.inventory-slot.has-item {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.item {
+    position: absolute;
+    inset: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.item-icon {
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 184, 148, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.item-icon::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.item-name {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    line-height: 1.2;
+    max-height: 2.4em;
+    overflow: hidden;
+}
+
+/* Item type specific styles */
+.head-slot .slot-icon::before,
+.head-item .item-icon::before,
+.helmet-item .item-icon::before {
+    content: '🪖';
+    font-size: 1.5rem;
+}
+
+.chest-slot .slot-icon::before,
+.chest-item .item-icon::before,
+.armor-item .item-icon::before {
+    content: '👕';
+    font-size: 1.5rem;
+}
+
+.hands-slot .slot-icon::before,
+.hands-item .item-icon::before,
+.gloves-item .item-icon::before {
+    content: '🧤';
+    font-size: 1.5rem;
+}
+
+.legs-slot .slot-icon::before,
+.legs-item .item-icon::before,
+.pants-item .item-icon::before {
+    content: '👖';
+    font-size: 1.5rem;
+}
+
+.feet-slot .slot-icon::before,
+.feet-item .item-icon::before,
+.boots-item .item-icon::before {
+    content: '👞';
+    font-size: 1.5rem;
+}
+
+/* Scrollbar styling */
+.inventory-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.inventory-grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.inventory-grid::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.inventory-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 /* Responsive design */
-@media (max-width: 600px) {
-    .menu-content {
-        padding: 1.5rem;
-        width: 95%;
+@media (max-width: 768px) {
+    .inventory-content {
+        flex-direction: column;
+        height: auto;
+        max-height: 80vh;
+        overflow-y: auto;
     }
 
-    h1 {
-        font-size: 2rem;
+    .equipment-section {
+        flex: none;
+        width: 100%;
     }
 
-    input[type="text"],
-    input[type="color"] {
-        padding: 0.6rem;
-    }
-
-    button {
-        padding: 0.8rem;
+    .inventory-grid {
+        grid-template-columns: repeat(4, 1fr);
+        height: auto;
+        max-height: 400px;
     }
 } 
