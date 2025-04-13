@@ -384,19 +384,134 @@ class Equipment {
         return feetGroup;
     }
 
-    static createItem(id, name, slot, type) {
+    static createStrawHat() {
+        const hatGroup = new THREE.Group();
+
+        // Kalap fő része (dome) - most kicsit nagyobb átmérővel
+        const domeGeometry = new THREE.SphereGeometry(0.25, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const hatMaterial = new THREE.MeshStandardMaterial({
+            color: 0xe6d5a7, // szalmasárga szín
+            roughness: 0.8,
+            metalness: 0.1,
+            side: THREE.DoubleSide // Mindkét oldalt rendereljük
+        });
+        const dome = new THREE.Mesh(domeGeometry, hatMaterial);
+        dome.position.y = 0.2;
+        hatGroup.add(dome);
+
+        // Kalap teteje (hogy ne legyen átlátszó felülről)
+        const topGeometry = new THREE.CircleGeometry(0.25, 32);
+        const top = new THREE.Mesh(topGeometry, hatMaterial);
+        top.rotation.x = -Math.PI / 2;
+        top.position.y = 0.2;
+        hatGroup.add(top);
+
+        // Kalap oldala (a rés kitöltésére)
+        const sideGeometry = new THREE.CylinderGeometry(0.25, 0.25, 0.1, 32, 1, true);
+        const side = new THREE.Mesh(sideGeometry, hatMaterial);
+        side.position.y = 0.15;
+        hatGroup.add(side);
+
+        // Kalap karimája - most nagyobb belső átmérővel
+        const brimGeometry = new THREE.RingGeometry(0.24, 0.45, 32);
+        const brim = new THREE.Mesh(brimGeometry, hatMaterial);
+        brim.rotation.x = -Math.PI / 2;
+        brim.position.y = 0.1;
+        hatGroup.add(brim);
+
+        // Kalap belseje (a karima alján)
+        const brimBottomGeometry = new THREE.RingGeometry(0.24, 0.45, 32);
+        const brimBottom = new THREE.Mesh(brimBottomGeometry, hatMaterial);
+        brimBottom.rotation.x = Math.PI / 2;
+        brimBottom.position.y = 0.09;
+        hatGroup.add(brimBottom);
+
+        // Karima belső oldala (a rés kitöltésére)
+        const brimInnerGeometry = new THREE.CylinderGeometry(0.24, 0.24, 0.01, 32, 1, true);
+        const brimInner = new THREE.Mesh(brimInnerGeometry, hatMaterial);
+        brimInner.position.y = 0.095;
+        hatGroup.add(brimInner);
+
+        // Piros szalag
+        const ribbonGeometry = new THREE.CylinderGeometry(0.252, 0.252, 0.05, 32);
+        const ribbonMaterial = new THREE.MeshStandardMaterial({
+            color: 0xcc0000, // piros szín
+            roughness: 0.5,
+            metalness: 0.2
+        });
+        const ribbon = new THREE.Mesh(ribbonGeometry, ribbonMaterial);
+        ribbon.position.y = 0.15;
+        hatGroup.add(ribbon);
+
+        // Szalma textúra imitálása vonalakkal
+        const createStrawLine = (startAngle, length) => {
+            const lineGeometry = new THREE.CylinderGeometry(0.002, 0.002, length, 8);
+            const line = new THREE.Mesh(lineGeometry, hatMaterial);
+            line.position.y = 0.2;
+            line.rotation.z = startAngle;
+            return line;
+        };
+
+        // Vonalak hozzáadása a kupola részhez
+        for (let i = 0; i < 24; i++) {
+            const angle = (i / 24) * Math.PI * 2;
+            const line = createStrawLine(angle, 0.3);
+            hatGroup.add(line);
+        }
+
+        // Az egész kalap csoportot pozicionáljuk
+        hatGroup.position.y = 0.1;
+
+        return hatGroup;
+    }
+
+    static createItem(type, name, slot) {
         const item = {
-            id,
-            name,
-            slot,
-            type,
-            isEquippable: true
+            id: Math.random().toString(36).substr(2, 9),
+            name: name,
+            slot: slot,
+            type: type,
+            isEquippable: true,
+            model: null,
+            defense: 1,
+            special: false,
+            rarity: 'common',
+            description: "A basic equipment piece.",
+            nameColor: '#ffffff'
         };
 
         // Create the 3D model based on type
         switch(type) {
             case 'helmet':
-                item.model = Equipment.createHelmet();
+                // Speciális Sinka kalap ellenőrzése
+                if (name === "Straw Hat") {
+                    item.model = Equipment.createStrawHat();
+                    item.defense = 999;
+                    item.special = true;
+                    item.rarity = 'legendary';
+                    item.description = "A legendary straw hat that belongs to great pirates. It holds immense power and a rich history.";
+                    item.nameColor = '#9b59b6'; // Lila szín a névnek
+                    item.glowEffect = {
+                        color: '#9b59b6',
+                        intensity: 2.0,
+                        pulse: true
+                    };
+                    // Speciális statisztikák
+                    item.stats = {
+                        strength: 100,
+                        agility: 100,
+                        intelligence: 100,
+                        luck: 999
+                    };
+                    // Egyedi effektek
+                    item.effects = {
+                        glow: true,
+                        particles: true,
+                        trail: true
+                    };
+                } else {
+                    item.model = Equipment.createHelmet();
+                }
                 break;
             case 'chest':
                 item.model = Equipment.createChest();

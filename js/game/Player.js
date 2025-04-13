@@ -1,8 +1,30 @@
 class Player {
     constructor(name = 'Player', skinColor = '#ffd700') {
         this.name = name;
-        this.skinColor = skinColor;
-        this.mesh = this.createMesh();
+        // Domka speciális színe
+        if (this.name === 'Domka') {
+            this.skinColor = '#8B5E3C'; // Sötétebb barna szín
+        } else {
+            this.skinColor = skinColor;
+        }
+        this.mesh = null;
+        this.nameTag = null;
+        this.equipment = new Map();
+        this.equipmentMeshes = new Map();
+        this.inventory = new Inventory();
+
+        // Először létrehozzuk a mesh-t
+        this.createMesh();
+        
+        // Sinka speciális kalapja csak az inventoryba
+        if (this.name === 'Sinka') {
+            const strawHat = Equipment.createItem('helmet', 'Straw Hat', Equipment.SLOTS.HEAD);
+            if (strawHat) {
+                this.inventory.addItem(strawHat);
+                console.log('Straw Hat added to inventory for Sinka');
+            }
+        }
+
         this.speed = 0.15;
         this.rotationSpeed = 0.1;
         this.jumpForce = 0.2;
@@ -10,11 +32,6 @@ class Player {
         this.verticalVelocity = 0;
         this.isJumping = false;
         
-        // Add inventory and equipment
-        this.inventory = new Inventory();
-        this.equipment = new Map();
-        this.equipmentMeshes = new Map(); // Store equipment meshes separately
-
         // Add test equipment
         this.inventory.addItem({
             id: 'helmet-1',
@@ -84,10 +101,10 @@ class Player {
         const bodyGeometry = new THREE.ConeGeometry(0.35, 1.0, 16);
         const bodyMaterial = new THREE.MeshStandardMaterial({ 
             color: this.skinColor,
-            roughness: 0.3,
-            metalness: 0.4,
+            roughness: 0.7,
+            metalness: 0.1,
             emissive: this.skinColor,
-            emissiveIntensity: 0.2
+            emissiveIntensity: 0.1
         });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
         body.position.y = 0.5;  // Body sits on the ground
@@ -99,10 +116,10 @@ class Player {
         const headGeometry = new THREE.SphereGeometry(0.25, 32, 32);
         const headMaterial = new THREE.MeshStandardMaterial({ 
             color: this.skinColor,
-            roughness: 0.3,
-            metalness: 0.4,
+            roughness: 0.7,
+            metalness: 0.1,
             emissive: this.skinColor,
-            emissiveIntensity: 0.2
+            emissiveIntensity: 0.1
         });
         const head = new THREE.Mesh(headGeometry, headMaterial);
         head.position.y = 1.3;  // Head floats above body
@@ -217,7 +234,7 @@ class Player {
         const particleSystem = this.createParticleSystem();
         group.add(particleSystem);
 
-        return group;
+        this.mesh = group;
     }
 
     createParticleSystem() {
@@ -388,22 +405,27 @@ class Player {
     equipItem(item) {
         // If the item comes from network and doesn't have a model, create it
         if (!item.model) {
-            switch(item.type) {
-                case 'helmet':
-                    item.model = Equipment.createHelmet();
-                    break;
-                case 'chest':
-                    item.model = Equipment.createChest();
-                    break;
-                case 'hands':
-                    item.model = Equipment.createHands();
-                    break;
-                case 'legs':
-                    item.model = Equipment.createLegs();
-                    break;
-                case 'feet':
-                    item.model = Equipment.createFeet();
-                    break;
+            // Speciális kezelés a Straw Hat-nek
+            if (item.name === 'Straw Hat') {
+                item.model = Equipment.createStrawHat();
+            } else {
+                switch(item.type) {
+                    case 'helmet':
+                        item.model = Equipment.createHelmet();
+                        break;
+                    case 'chest':
+                        item.model = Equipment.createChest();
+                        break;
+                    case 'hands':
+                        item.model = Equipment.createHands();
+                        break;
+                    case 'legs':
+                        item.model = Equipment.createLegs();
+                        break;
+                    case 'feet':
+                        item.model = Equipment.createFeet();
+                        break;
+                }
             }
         }
 
