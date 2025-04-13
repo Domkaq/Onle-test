@@ -7,6 +7,15 @@ class UI {
         this.lastEquipTime = 0; // Add cooldown tracking
         this.equipCooldown = 500; // 500ms cooldown between equips
         this.tooltip = null;
+        this.tooltipElement = null;
+        
+        // Preview scene properties
+        this.previewScene = null;
+        this.previewCamera = null;
+        this.previewRenderer = null;
+        this.previewModel = null;
+        this.previewLight = null;
+        
         this.createInventoryUI();
         this.createTooltip();
     }
@@ -79,34 +88,30 @@ class UI {
         equipmentSection.className = 'equipment-section';
         
         // Create equipment slots
-        const slots = [
-            { name: 'Head', type: 'head' },
-            { name: 'Chest', type: 'chest' },
-            { name: 'Hands', type: 'hands' },
-            { name: 'Legs', type: 'legs' },
-            { name: 'Feet', type: 'feet' }
-        ];
-
+        const slots = ['Head', 'Chest', 'Hands', 'Legs', 'Feet'];
+        
         const equipmentSlots = document.createElement('div');
         equipmentSlots.className = 'equipment-slots';
 
         slots.forEach(slot => {
             const slotElement = document.createElement('div');
             slotElement.className = 'equipment-slot';
-            slotElement.dataset.slot = slot.type;
+            slotElement.dataset.slot = slot.toLowerCase();
             slotElement.innerHTML = `
-                <div class="slot-icon ${slot.type}-slot"></div>
-                <span class="slot-name">${slot.name}</span>
+                <div class="slot-icon ${slot.toLowerCase()}-slot"></div>
+                <span class="slot-name">${slot}</span>
             `;
             equipmentSlots.appendChild(slotElement);
         });
 
         equipmentSection.appendChild(equipmentSlots);
         
-        // Create character preview
+        // Create character preview without any dividers
         const characterPreview = document.createElement('div');
         characterPreview.className = 'character-preview';
-        characterPreview.innerHTML = '<div class="character-model"></div>';
+        const modelContainer = document.createElement('div');
+        modelContainer.className = 'character-model';
+        characterPreview.appendChild(modelContainer);
         equipmentSection.appendChild(characterPreview);
 
         // Create inventory grid section
@@ -133,6 +138,9 @@ class UI {
         this.inventoryContainer.appendChild(contentWrapper);
         document.body.appendChild(this.inventoryContainer);
 
+        // Initialize preview renderer
+        this.initializePreview();
+        
         // Add event listeners
         this.setupInventoryEvents();
         
@@ -186,14 +194,20 @@ class UI {
     showTooltip(item, event) {
         if (!item) return;
         
+        const rarityClass = item.rarity ? `item-${item.rarity}` : 'item-common';
+        
         this.tooltip.innerHTML = `
             <div class="tooltip-header">
-                <div class="tooltip-name">${item.name}</div>
+                <div class="tooltip-name ${rarityClass}">${item.name}</div>
                 <div class="tooltip-type">${item.type}</div>
             </div>
             <div class="tooltip-stats">
                 ${this.getItemStats(item)}
             </div>
+            ${item.description ? `
+            <div class="tooltip-description">
+                ${item.description}
+            </div>` : ''}
         `;
         
         this.tooltip.classList.add('visible');
@@ -233,13 +247,61 @@ class UI {
             </div>`;
         }
         
+        if (item.rarity) {
+            stats += `<div class="tooltip-stat">
+                <span>Rarity</span>
+                <span class="tooltip-stat-value tooltip-${item.rarity}">${item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1)}</span>
+            </div>`;
+        }
+        
         return stats || '<div class="tooltip-stat">No additional stats</div>';
+    }
+
+    initializePreview() {
+        // Create preview scene
+        this.previewScene = new THREE.Scene();
+        
+        // Create preview camera - adjusted to focus on head
+        this.previewCamera = new THREE.PerspectiveCamera(35, 1, 0.1, 1000);
+        this.previewCamera.position.set(0, 0.8, 1.2);
+        this.previewCamera.lookAt(0, 0.8, 0);
+
+        // Create preview renderer with transparency
+        const previewContainer = this.inventoryContainer.querySelector('.character-model');
+        this.previewRenderer = new THREE.WebGLRenderer({ 
+            antialias: true,
+            alpha: true 
+        });
+        this.previewRenderer.setSize(180, 180);
+        this.previewRenderer.setPixelRatio(window.devicePixelRatio);
+        previewContainer.appendChild(this.previewRenderer.domElement);
+
+        // Add lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+        this.previewScene.add(ambientLight);
+
+        this.previewLight = new THREE.DirectionalLight(0xffffff, 1);
+        this.previewLight.position.set(1, 1.5, 2);
+        this.previewScene.add(this.previewLight);
+
+        // Start preview rendering
+        this.renderPreview();
+    }
+
+    renderPreview() {
+        if (!this.previewScene || !this.previewCamera || !this.previewRenderer) return;
+        requestAnimationFrame(() => this.renderPreview());
+        this.previewRenderer.render(this.previewScene, this.previewCamera);
     }
 
     updateInventory() {
         if (!window.game || !window.game.player) return;
         
         const player = window.game.player;
+        
+        // Update preview model
+        this.updatePreviewModel(player);
+        
         const grid = this.inventoryContainer.querySelector('.inventory-grid');
         
         // Clear all slots
@@ -335,6 +397,31 @@ class UI {
                 });
             }
         });
+    }
+
+    updatePreviewModel(player) {
+        if (!this.previewScene) return;
+
+        // Remove existing preview model
+        if (this.previewModel) {
+            this.previewScene.remove(this.previewModel);
+        }
+
+        // Clone the entire player mesh first
+        this.previewModel = player.mesh.clone();
+        
+        // Remove the name tag if it exists
+        const nameTag = this.previewModel.getObjectByName('nameTag');
+        if (nameTag) {
+            nameTag.parent.remove(nameTag);
+        }
+
+        // Position the model to center the head
+        this.previewModel.position.set(0, -0.5, 0);
+        this.previewModel.rotation.y = -0.3;
+        
+        // Add to preview scene
+        this.previewScene.add(this.previewModel);
     }
 }
 
