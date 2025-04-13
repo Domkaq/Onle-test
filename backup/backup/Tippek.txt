@@ -1,0 +1,5 @@
+Na most szeretném ha csinálnál egy ui-t KÜLÖN fileba, mint a pályát és az legyen, hogy a játékos neve ki legyen a karatere fölé írva
+
+Szia, szeretnék egy 3d-s multiplayer játékot csinálni weben ahol beírhatod a neved és egy világban tudsz mozogni a többi játékossal és a neved megjelenik a karatered felett!
+A karaktered egy fejből és egy testből áll ami egy kúp lefele, a fejen legyen kettő gomb szem és legyen egy választó ahol bőrszínt tudsz választani a főmenuben még mielőtt elkezdesz játszani, a név beírónál!
+A játék rendszere moduláris legyen de legyen egy main.js ami kezeli a többi részét, de MODULÁRIS LEGYEN minden, hogy optimalizáltabb és könnyebben kezelhető legyen de tényleg minden legyen moduláris, a ui is legyen külön minden.
