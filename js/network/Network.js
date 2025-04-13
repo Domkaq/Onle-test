@@ -5,8 +5,12 @@ class Network {
     }
 
     initialize() {
-        // Connect to the server
-        this.socket = io('http://localhost:3000');
+        // Connect to the server using the current hostname
+        const serverUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : window.location.origin;
+            
+        this.socket = io(serverUrl);
 
         // Handle connection events
         this.socket.on('connect', () => {
