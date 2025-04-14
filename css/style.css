@@ -765,35 +765,138 @@ button:active {
     }
 }
 
-/* Critical Hit Animation */
-.crit-animation {
+/* Click Animation */
+.click-animation {
     position: absolute;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #00b894;
-    text-shadow: 0 0 10px rgba(0, 184, 148, 0.5);
-    animation: critAnim 1s ease-out forwards;
     pointer-events: none;
-    z-index: 1001;
+    animation: clickPulse 1s ease-out forwards;
+    z-index: 1000;
 }
 
-@keyframes critAnim {
+@keyframes clickPulse {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 0.8;
+        border: 2px solid var(--click-color);
+        border-radius: 50%;
+    }
+    100% {
+        width: var(--click-size);
+        height: var(--click-size);
+        opacity: 0;
+        border: 2px solid var(--click-color);
+        border-radius: 50%;
+        transform: scale(3);
+    }
+}
+
+/* Enhanced Crit Animation */
+.crit-animation {
+    position: absolute;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ff9f43;
+    text-shadow: 0 0 10px rgba(255, 159, 67, 0.5),
+                 0 0 20px rgba(255, 159, 67, 0.3),
+                 0 0 30px rgba(255, 159, 67, 0.2);
+    animation: critFloat 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    pointer-events: none;
+    z-index: 1001;
+    transform-origin: center;
+}
+
+@keyframes critFloat {
     0% {
         opacity: 0;
-        transform: translate(-50%, -50%) scale(0.5);
+        transform: translate(-50%, -50%) scale(0.5) rotate(-10deg);
     }
     20% {
         opacity: 1;
-        transform: translate(-50%, -50%) scale(1.2);
+        transform: translate(-50%, -70%) scale(1.2) rotate(5deg);
     }
     80% {
         opacity: 1;
-        transform: translate(-50%, -100%) scale(1);
+        transform: translate(-50%, -120%) scale(1) rotate(-5deg);
     }
     100% {
         opacity: 0;
-        transform: translate(-50%, -150%) scale(0.8);
+        transform: translate(-50%, -150%) scale(0.8) rotate(10deg);
     }
+}
+
+/* Enhanced Combo Display */
+.combo-display {
+    position: fixed;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    background: rgba(44, 48, 56, 0.95);
+    padding: 1rem;
+    border-radius: 10px;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    transition: all 0.15s ease;
+    opacity: 0;
+    scale: 0.8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.combo-display.active {
+    opacity: 1;
+    scale: 1;
+}
+
+.combo-display.super {
+    border-color: #00b894;
+    box-shadow: 0 0 20px rgba(0, 184, 148, 0.3);
+}
+
+.combo-text {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.combo-multiplier {
+    font-size: 1.5rem;
+    color: #00b894;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.combo-progress {
+    width: 100px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.combo-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #00b894, #00cec9);
+    width: 0%;
+    transition: width 0.15s ease;
+}
+
+/* Combo Pulse Animation */
+@keyframes comboPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.combo-display.super .combo-multiplier {
+    animation: comboPulse 0.3s ease infinite;
+    color: #00cec9;
+    text-shadow: 0 0 10px rgba(0, 206, 201, 0.5);
 }
 
 /* Merchant Styles */
@@ -909,4 +1012,95 @@ button:active {
     0% { transform: translateX(-50%) scale(1); }
     50% { transform: translateX(-50%) scale(1.05); }
     100% { transform: translateX(-50%) scale(1); }
+}
+
+/* Click Value Animation */
+.click-value {
+    position: absolute;
+    pointer-events: none;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #00b894;
+    text-shadow: 0 0 5px rgba(0, 184, 148, 0.3);
+    animation: floatUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    z-index: 1000;
+}
+
+@keyframes floatUp {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 0) scale(0.8);
+    }
+    20% {
+        opacity: 1;
+        transform: translate(-50%, -20px) scale(1.1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -40px) scale(0.9);
+    }
+}
+
+/* Különböző színek a kattintás értékekhez */
+.click-value.normal { color: #00b894; }
+.click-value.combo { color: #6c5ce7; }
+.click-value.high-combo { color: #ffd700; }
+.click-value.crit { 
+    color: #ff9f43;
+    font-size: 1.4rem;
+    text-shadow: 0 0 10px rgba(255, 159, 67, 0.5);
+}
+
+/* Combo Counter in Click Animation */
+.click-value .combo-count {
+    display: block;
+    font-size: 0.7em;
+    opacity: 0.8;
+    margin-top: 2px;
+    color: #6c5ce7;
+}
+
+.click-value.high-combo .combo-count {
+    color: #ffd700;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.click-value.super-combo .combo-count {
+    color: #ff0000;
+    text-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+    animation: pulsateCombo 0.5s infinite;
+}
+
+@keyframes pulsateCombo {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Click Value Bonus Styles */
+.click-value span {
+    font-size: 0.9em;
+    margin-left: 2px;
+    opacity: 0.9;
+}
+
+.click-value .level-bonus {
+    color: #00b894 !important; /* Zöld szín a szint bónusznak */
+    text-shadow: 0 0 5px rgba(0, 184, 148, 0.3);
+}
+
+.click-value .combo-bonus {
+    color: #6c5ce7 !important; /* Lila szín a kombó bónusznak */
+    text-shadow: 0 0 5px rgba(108, 92, 231, 0.3);
+}
+
+.click-value.high-combo .combo-bonus {
+    color: #ffd700 !important; /* Arany szín magas kombónál */
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+}
+
+.click-value.crit .level-bonus,
+.click-value.crit .combo-bonus {
+    color: #ff9f43 !important; /* Narancssárga szín kritikus találatnál */
+    text-shadow: 0 0 5px rgba(255, 159, 67, 0.3);
 } 

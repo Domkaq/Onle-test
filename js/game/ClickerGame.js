@@ -265,34 +265,124 @@ class ClickerGame {
     }
 
     createClickAnimation(x, y) {
+        // Alap kattintás animáció
         const anim = document.createElement('div');
         anim.className = 'click-animation';
         anim.style.left = x + 'px';
         anim.style.top = y + 'px';
         
-        // Random szín és méret a változatosságért
-        const hue = Math.random() * 360;
-        const size = 30 + Math.random() * 20;
+        // Szín és méret beállítása kombó alapján
+        let hue;
+        if (this.combo >= 100) {
+            hue = 45; // Arany
+        } else if (this.combo >= 50) {
+            hue = 280; // Lila
+        } else {
+            hue = Math.random() * 360;
+        }
+        
+        const size = 30 + Math.min(this.combo, 100) * 0.2;
         anim.style.setProperty('--click-color', `hsl(${hue}, 80%, 60%)`);
         anim.style.setProperty('--click-size', `${size}px`);
-
+        
         this.clickAnimContainer.appendChild(anim);
         
-        // Animáció végén töröljük az elemet
-        setTimeout(() => anim.remove(), 1000);
+        // Kattintás érték animáció
+        const valueAnim = document.createElement('div');
+        valueAnim.className = 'click-value';
+        
+        // Érték kiszámítása részletesen
+        const baseClickValue = this.baseClickValue; // Az 1-es alap érték
+        const levelBonus = this.clickValue - this.baseClickValue; // Szint bónusz
+        let comboBonus = 0;
+        let critBonus = 0;
+        
+        // Kombó bónusz számítása
+        if (this.combo > 0 && this.comboMultiplier > 0) {
+            comboBonus = (baseClickValue + levelBonus) * this.comboMultiplier;
+        }
+        
+        // HTML összeállítása az összes bónusszal
+        let html = `+${this.formatNumber(Math.floor(baseClickValue))}`;
+        
+        // Szint bónusz hozzáadása
+        if (levelBonus > 0) {
+            html += `<span class="level-bonus">(+${this.formatNumber(Math.floor(levelBonus))})</span>`;
+        }
+        
+        // Kombó bónusz hozzáadása
+        if (comboBonus > 0) {
+            html += `<span class="combo-bonus">(+${this.formatNumber(Math.floor(comboBonus))})</span>`;
+        }
+        
+        valueAnim.innerHTML = html;
+        
+        // Stílus osztályok beállítása
+        if (this.combo >= 100) {
+            valueAnim.classList.add('high-combo');
+        } else if (this.combo >= 50) {
+            valueAnim.classList.add('combo');
+        } else {
+            valueAnim.classList.add('normal');
+        }
+        
+        // Random X offset a változatosságért
+        const xOffset = (Math.random() - 0.5) * 40;
+        valueAnim.style.left = (x + xOffset) + 'px';
+        valueAnim.style.top = y + 'px';
+        
+        document.body.appendChild(valueAnim);
+        
+        // Második animáció magas kombónál
+        if (this.combo >= 50) {
+            setTimeout(() => {
+                const secondAnim = document.createElement('div');
+                secondAnim.className = 'click-animation';
+                secondAnim.style.left = x + 'px';
+                secondAnim.style.top = y + 'px';
+                secondAnim.style.setProperty('--click-color', `hsl(${hue}, 80%, 40%)`);
+                secondAnim.style.setProperty('--click-size', `${size * 1.5}px`);
+                this.clickAnimContainer.appendChild(secondAnim);
+                setTimeout(() => secondAnim.remove(), 800);
+            }, 100);
+        }
+        
+        // Elemek eltávolítása
+        setTimeout(() => anim.remove(), 800);
+        setTimeout(() => valueAnim.remove(), 800);
     }
 
     createCritAnimation(x, y, value) {
         const anim = document.createElement('div');
-        anim.className = 'crit-animation';
+        anim.className = 'click-value crit';
         anim.style.left = x + 'px';
         anim.style.top = y + 'px';
-        anim.textContent = `CRIT! ${Math.floor(value)}`;
+        
+        // Formázott érték
+        const formattedValue = this.formatNumber(Math.floor(value));
+        anim.innerHTML = `CRIT!<br>+${formattedValue}`;
+        
+        // Extra effektek magas kombónál
+        if (this.combo >= 50) {
+            anim.style.textShadow = `0 0 10px rgba(255, 159, 67, 0.8),
+                                   0 0 20px rgba(255, 159, 67, 0.5),
+                                   0 0 30px rgba(255, 159, 67, 0.3)`;
+        }
         
         document.body.appendChild(anim);
         
-        // Animáció végén töröljük az elemet
-        setTimeout(() => anim.remove(), 1000);
+        // Visszhang effekt magas kombónál
+        if (this.combo >= 100) {
+            setTimeout(() => {
+                const echoAnim = anim.cloneNode(true);
+                echoAnim.style.opacity = '0.5';
+                echoAnim.style.transform = 'scale(1.2)';
+                document.body.appendChild(echoAnim);
+                setTimeout(() => echoAnim.remove(), 800);
+            }, 100);
+        }
+        
+        setTimeout(() => anim.remove(), 800);
     }
 
     updateHUD() {
@@ -308,10 +398,18 @@ class ClickerGame {
         comboValue.textContent = this.combo;
         multiplierValue.textContent = (1 + this.comboMultiplier).toFixed(2);
 
-        // Combo progress bar
+        // Combo progress bar - most már helyesen definiáljuk a threshold-ot
         const threshold = this.upgrades.comboThreshold.getEffect(this.upgrades.comboThreshold.level);
         const progress = (this.combo % threshold) / threshold * 100;
         comboBar.style.width = `${progress}%`;
+
+        // Combo effektek
+        this.comboDisplay.className = 'combo-display' + (this.combo > 0 ? ' active' : '');
+        if (this.combo >= threshold) {
+            this.comboDisplay.classList.add('super');
+        } else {
+            this.comboDisplay.classList.remove('super');
+        }
 
         // XP és Level frissítése
         const levelValue = this.levelDisplay.querySelector('.level-value');
@@ -333,14 +431,6 @@ class ClickerGame {
         clickValue.textContent = this.clickValue.toFixed(1);
         critChance.textContent = `${(this.levelBonuses.getCritChance(this.level) * 100).toFixed(1)}%`;
         critMultiplier.textContent = `${this.levelBonuses.getCritMultiplier(this.level).toFixed(1)}x`;
-
-        // Combo effektek
-        this.comboDisplay.className = 'combo-display' + (this.combo > 0 ? ' active' : '');
-        if (this.combo >= threshold) {
-            this.comboDisplay.classList.add('super');
-        } else {
-            this.comboDisplay.classList.remove('super');
-        }
     }
 
     formatNumber(num) {
