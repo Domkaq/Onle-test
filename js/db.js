@@ -1,10 +1,27 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+// Adatbázis konfiguráció
+const isProduction = process.env.NODE_ENV === 'production';
+const connectionString = isProduction
+    ? process.env.DATABASE_URL // Render.com környezeti változó
+    : 'postgresql://onleprogess_user:z2ExG41pVO0lQPiqB94icWf8c8XpLJKV@dpg-cvu4qvruibrs73eikhm0-a.frankfurt-postgres.render.com/onleprogess'; // Fejlesztői környezet
+
+// Pool konfiguráció SSL beállításokkal
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
+    connectionString,
+    ssl: isProduction ? {
+        rejectUnauthorized: false // Render.com-hoz szükséges
+    } : false
+});
+
+// Kapcsolat tesztelése
+pool.connect((err, client, release) => {
+    if (err) {
+        console.error('Error connecting to the database:', err.stack);
+    } else {
+        console.log('Successfully connected to database');
+        release();
     }
 });
 
