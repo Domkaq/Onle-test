@@ -18,6 +18,8 @@ app.use(express.static(path.join(__dirname)));
 
 // Store connected players with their equipment
 const players = new Map();
+// Store player names to prevent duplicates
+const playerNames = new Set();
 
 // Store clicker game data for each player
 const playerClickerData = new Map();
@@ -118,6 +120,15 @@ io.on('connection', (socket) => {
 
     // Handle player join
     socket.on('player-join', async (data) => {
+        // Ellenőrizzük, hogy a név már használatban van-e
+        if (playerNames.has(data.name)) {
+            socket.emit('join-error', {
+                error: 'name_taken',
+                message: 'Ez a név már használatban van. Kérlek válassz másik nevet!'
+            });
+            return;
+        }
+
         console.log('Player joined:', data);
         const playerData = {
             id: socket.id,
@@ -126,6 +137,9 @@ io.on('connection', (socket) => {
             position: data.position,
             equipment: data.equipment || []
         };
+        
+        // Hozzáadjuk a nevet a foglalt nevek listájához
+        playerNames.add(data.name);
         players.set(socket.id, playerData);
         
         // Try to load existing progress using player name
@@ -163,7 +177,10 @@ io.on('connection', (socket) => {
         }
         
         // Send initial clicker data to player
-        socket.emit('clicker-data', playerClickerData.get(socket.id));
+        socket.emit('join-success', {
+            message: 'Sikeres csatlakozás!',
+            playerData: playerClickerData.get(socket.id)
+        });
         
         // Broadcast to other players with full equipment data
         socket.broadcast.emit('player-joined', playerData);
@@ -419,10 +436,14 @@ io.on('connection', (socket) => {
                 console.error('Error during final save:', error);
             }
             
+            // Töröljük a játékos nevét a foglalt nevek közül
+            playerNames.delete(player.name);
             playerClickerData.delete(socket.id);
         }
         
         if (players.has(socket.id)) {
+            const player = players.get(socket.id);
+            playerNames.delete(player.name);
             players.delete(socket.id);
             io.emit('player-left', socket.id);
         }

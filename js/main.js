@@ -28,7 +28,7 @@ class Main {
             localStorage.setItem('playerName', playerName);
 
             if (playerName.trim() === '') {
-                alert('Kérlek add meg a neved!');
+                this.showError('Kérlek add meg a neved!');
                 return;
             }
 
@@ -57,6 +57,73 @@ class Main {
                 playerNameInput.value = savedName;
             }
         }
+
+        // Hálózati hibaüzenetek kezelése
+        if (this.network) {
+            this.network.socket.on('join-error', (data) => {
+                // Ha a név foglalt, mutassuk meg újra a menüt és jelenítsük meg a hibaüzenetet
+                if (data.error === 'name_taken') {
+                    this.ui.showMainMenu();
+                    this.showError(data.message);
+                    
+                    // Töröljük a mentett nevet
+                    localStorage.removeItem('playerName');
+                    
+                    // Töröljük a játékos objektumot
+                    if (this.game.player) {
+                        this.game.scene.remove(this.game.player.mesh);
+                        this.game.player = null;
+                    }
+                }
+            });
+
+            this.network.socket.on('join-success', (data) => {
+                console.log('Successfully joined the game:', data.message);
+                // Frissítjük a játékos adatait
+                if (this.game.clickerGame) {
+                    Object.assign(this.game.clickerGame, data.playerData);
+                    this.game.clickerGame.updateHUD();
+                }
+            });
+        }
+    }
+
+    showError(message) {
+        // Hiba üzenet megjelenítése
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            z-index: 1000;
+            animation: fadeInOut 3s forwards;
+        `;
+
+        // CSS animáció hozzáadása
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translate(-50%, -20px); }
+                10% { opacity: 1; transform: translate(-50%, 0); }
+                90% { opacity: 1; transform: translate(-50%, 0); }
+                100% { opacity: 0; transform: translate(-50%, -20px); }
+            }
+        `;
+        document.head.appendChild(style);
+        document.body.appendChild(errorDiv);
+
+        // Hibaüzenet eltávolítása 3 másodperc után
+        setTimeout(() => {
+            errorDiv.remove();
+            style.remove();
+        }, 3000);
     }
 }
 
