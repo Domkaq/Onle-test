@@ -13,6 +13,7 @@ class Input {
         this.targetMouseX = 0;
         this.targetMouseY = 0;
         this.mouseSensitivity = 0.003;
+        this.isMouseDown = false;
         this.isMouseLocked = false;
 
         this.setupEventListeners();
@@ -22,6 +23,8 @@ class Input {
         document.addEventListener('keydown', (event) => this.onKeyDown(event));
         document.addEventListener('keyup', (event) => this.onKeyUp(event));
         document.addEventListener('mousemove', (event) => this.onMouseMove(event));
+        document.addEventListener('mousedown', (event) => this.onMouseDown(event));
+        document.addEventListener('mouseup', (event) => this.onMouseUp(event));
         document.addEventListener('pointerlockchange', () => this.onPointerLockChange());
         document.addEventListener('pointerlockerror', () => this.onPointerLockError());
     }
@@ -83,8 +86,30 @@ class Input {
         }
     }
 
+    onMouseDown(event) {
+        // Bal egérgomb (0)
+        if (event.button === 0) {
+            // Ne blokkoljuk a UI elemekre való kattintást
+            if (event.target.closest('.inventory') || 
+                event.target.closest('.menu') || 
+                event.target.closest('.merchant-dialog')) {
+                return;
+            }
+            
+            this.isMouseDown = true;
+        }
+    }
+
+    onMouseUp(event) {
+        // Bal egérgomb (0)
+        if (event.button === 0) {
+            this.isMouseDown = false;
+        }
+    }
+
     onMouseMove(event) {
-        if (this.isMouseLocked) {
+        // Csak akkor forgassuk a kamerát, ha le van nyomva az egérgomb
+        if (this.isMouseDown) {
             // Update rotation based on mouse movement
             this.targetMouseX += event.movementX * this.mouseSensitivity;
             this.targetMouseY += event.movementY * this.mouseSensitivity; // Removed inversion

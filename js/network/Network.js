@@ -91,9 +91,35 @@ class Network {
                 rotation: data.position.rotation
             });
         });
+
+        // Handle player click count updates
+        this.socket.on('player-click-count', (data) => {
+            console.log('Received player click count:', data);
+            // Frissítjük a játékos clickcount-ját
+            if (data.id === this.socket.id) {
+                // Ha a saját adatunk, nem kell külön frissíteni (a clicker-data már frissíti)
+                return;
+            }
+            
+            // Másik játékos esetén frissítjük a névtáblát
+            const otherPlayer = window.game.otherPlayers.get(data.id);
+            if (otherPlayer) {
+                otherPlayer.updateClickCount(data.clicks);
+            }
+        });
+
+        // Handle clicker game data updates
+        this.socket.on('clicker-data', (data) => {
+            console.log('Received clicker game data:', data);
+            // Ha már létezik a ClickerGame példány, akkor frissítjük
+            // (egyébként a ClickerGame inicializálásakor már fel lesz iratkozva az eseményre)
+            if (window.game && window.game.clickerGame) {
+                // Eseménykezelés a ClickerGame osztályban van implementálva
+            }
+        });
     }
 
-    connect(playerName, skinColor) {
+    connect(playerName, skinColor, persistentId) {
         const initialPosition = {
             x: window.game.player.mesh.position.x,
             y: window.game.player.mesh.position.y,
@@ -110,7 +136,8 @@ class Network {
             name: playerName,
             skinColor: skinColor,
             position: initialPosition,
-            equipment: equippedItems
+            equipment: equippedItems,
+            persistentId: persistentId
         });
     }
 

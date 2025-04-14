@@ -6,10 +6,12 @@ class Game {
         this.player = null;
         this.otherPlayers = new Map();
         this.input = new Input();
+        this.clickerGame = null;
+        this.merchant = null;
         
-        // Camera properties
-        this.cameraDistance = 8;
-        this.cameraHeight = 3;
+        // Camera properties - még közelebb hozzuk a kamerát
+        this.cameraDistance = 4; // 4-ről 3-ra csökkentve
+        this.cameraHeight = 2; // 2-ről 1.5-re csökkentve
         this.cameraTarget = new THREE.Vector3();
         this.cameraSmoothness = 0.08;
         
@@ -46,16 +48,13 @@ class Game {
         
         // Create richer environment
         this.createEnvironment();
+
+        // Initialize merchant
+        this.merchant = new Merchant(this);
+        this.scene.add(this.merchant.mesh);
         
         // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());
-        
-        // Setup pointer lock on canvas click
-        this.renderer.domElement.addEventListener('click', () => {
-            if (document.pointerLockElement !== this.renderer.domElement) {
-                this.renderer.domElement.requestPointerLock();
-            }
-        });
         
         // Make game instance globally available
         window.game = this;
@@ -220,6 +219,11 @@ class Game {
                 });
             }
         }
+
+        // Update merchant
+        if (this.merchant) {
+            this.merchant.update();
+        }
         
         // Render scene
         this.renderer.render(this.scene, this.camera);
@@ -281,20 +285,27 @@ class Game {
             
             // Smoothly move camera with dynamic smoothness
             const targetCameraPos = playerPos.clone().add(cameraOffset);
-            targetCameraPos.y += Math.sin(this.input.mouseY) * 3; // Apply vertical offset to camera position
+            targetCameraPos.y += Math.sin(this.input.mouseY) * 1.5; // 2-ről 1.5-re csökkentve
             this.camera.position.lerp(targetCameraPos, this.cameraSmoothness);
             
             // Update camera target to look at player
             this.cameraTarget.lerp(playerPos, this.cameraSmoothness);
-            this.cameraTarget.y = playerPos.y + 1.5; // Look at player's head level
+            this.cameraTarget.y = playerPos.y + 1; // 1.2-ről 1-re csökkentve
             
             // Look at target
             this.camera.lookAt(this.cameraTarget);
         }
     }
 
-    requestPointerLock() {
-        this.renderer.domElement.requestPointerLock();
+    // Ez a metódus akkor fut le, amikor a játékos létrejön
+    initializePlayer(player) {
+        this.player = player;
+        this.scene.add(this.player.mesh);
+        
+        // Most inicializáljuk a clicker játékot
+        if (!this.clickerGame) {
+            this.clickerGame = new ClickerGame();
+        }
     }
 }
 

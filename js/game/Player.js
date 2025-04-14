@@ -12,6 +12,7 @@ class Player {
         this.equipment = new Map();
         this.equipmentMeshes = new Map();
         this.inventory = new Inventory();
+        this.clickCount = 0;
 
         // Először létrehozzuk a mesh-t
         this.createMesh();
@@ -162,7 +163,7 @@ class Player {
         rightShine.position.set(0.1, 1.37, 0.23);
         group.add(rightShine);
 
-        // Create modern name tag with CSS-inspired design
+        // Create modern name tag with CSS-inspired design and click count
         const nameTagGroup = new THREE.Group();
         
         const canvas = document.createElement('canvas');
@@ -208,24 +209,26 @@ class Player {
         context.shadowBlur = 4;
         context.shadowOffsetX = 0;
         context.shadowOffsetY = 2;
-        context.fillText(this.name, centerX, centerY);
-
-        const nameTexture = new THREE.CanvasTexture(canvas);
-        nameTexture.minFilter = THREE.LinearFilter;
-        nameTexture.magFilter = THREE.LinearFilter;
+        
+        // Draw name with click count
+        this.nameTagTexture = new THREE.CanvasTexture(canvas);
+        this.nameTagTexture.minFilter = THREE.LinearFilter;
+        this.nameTagTexture.magFilter = THREE.LinearFilter;
+        
+        this.updateNameTagTexture();
         
         const nameMaterial = new THREE.SpriteMaterial({
-            map: nameTexture,
+            map: this.nameTagTexture,
             sizeAttenuation: true,
             depthTest: false,
             transparent: true
         });
         
-        const nameTag = new THREE.Sprite(nameMaterial);
-        nameTag.scale.set(1.2, 0.3, 1);  // Increased base scale
-        nameTag.center.set(0.5, 1.0);
+        this.nameTag = new THREE.Sprite(nameMaterial);
+        this.nameTag.scale.set(1.2, 0.3, 1);  // Increased base scale
+        this.nameTag.center.set(0.5, 1.0);
         
-        nameTagGroup.add(nameTag);
+        nameTagGroup.add(this.nameTag);
         nameTagGroup.position.y = 1.9;  // Slightly lower position to be closer to head
         
         group.add(nameTagGroup);
@@ -235,6 +238,77 @@ class Player {
         group.add(particleSystem);
 
         this.mesh = group;
+    }
+
+    updateNameTagTexture() {
+        if (!this.nameTagTexture) return;
+        
+        const canvas = this.nameTagTexture.image;
+        if (!canvas) return;
+        
+        const context = canvas.getContext('2d');
+        if (!context) return;
+        
+        // Clear canvas
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Create semi-transparent dark background with better contrast
+        context.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        
+        // Draw modern rounded rectangle
+        const radius = 10;
+        context.beginPath();
+        context.moveTo(radius, 0);
+        context.lineTo(canvas.width - radius, 0);
+        context.arcTo(canvas.width, 0, canvas.width, radius, radius);
+        context.lineTo(canvas.width, canvas.height - radius);
+        context.arcTo(canvas.width, canvas.height, canvas.width - radius, canvas.height, radius);
+        context.lineTo(radius, canvas.height);
+        context.arcTo(0, canvas.height, 0, canvas.height - radius, radius);
+        context.lineTo(0, radius);
+        context.arcTo(0, 0, radius, 0, radius);
+        context.closePath();
+        context.fill();
+        
+        // Set text style
+        const fontSize = 40;
+        context.font = `bold ${fontSize}px Arial, sans-serif`;
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 3;
+        
+        // Draw name
+        context.fillStyle = '#FFFFFF';
+        context.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        context.shadowBlur = 4;
+        context.shadowOffsetX = 0;
+        context.shadowOffsetY = 2;
+        context.fillText(this.name, centerX, centerY);
+        
+        // Draw click count with smaller font
+        const clicksText = `Clicks: ${this.formatClickCount(this.clickCount)}`;
+        context.font = `${fontSize * 0.6}px Arial, sans-serif`;
+        context.fillStyle = '#00b894'; // A teal color that matches the theme
+        context.fillText(clicksText, centerX, centerY + fontSize * 0.8);
+        
+        // Update texture
+        this.nameTagTexture.needsUpdate = true;
+    }
+    
+    formatClickCount(count) {
+        if (count < 1000) return count.toString();
+        
+        const suffixes = ['', 'K', 'M', 'B', 'T'];
+        const exp = Math.floor(Math.log(count) / Math.log(1000));
+        
+        return (count / Math.pow(1000, exp)).toFixed(1) + suffixes[exp];
+    }
+    
+    updateClickCount(count) {
+        this.clickCount = count;
+        this.updateNameTagTexture();
     }
 
     createParticleSystem() {
@@ -375,9 +449,6 @@ class Player {
         this.updateParticles();
 
         // Update name tag with enhanced visibility
-        const nameTagGroup = this.mesh.children[this.mesh.children.length - 2];
-        const nameTag = nameTagGroup.children[0];
-        
         if (window.game && window.game.camera) {
             const camera = window.game.camera;
             
@@ -388,15 +459,28 @@ class Player {
             // Subtle floating animation
             const time = Date.now() * 0.001;
             const floatOffset = Math.sin(time * 1.2) * 0.02;
-            nameTagGroup.position.y = 1.9 + floatOffset;  // Adjusted base height
             
-            // Smooth scale transition with larger base size
-            const scaleFactor = 0.05;
-            nameTag.scale.x += (baseScale * 1.2 - nameTag.scale.x) * scaleFactor;
-            nameTag.scale.y += (baseScale * 0.3 - nameTag.scale.y) * scaleFactor;
+            // Frissítjük a saját kattintási számunkat, ha van clickerGame
+            if (window.game.clickerGame && this === window.game.player) {
+                this.clickCount = window.game.clickerGame.clicks;
+                this.updateNameTagTexture();
+            }
             
-            // Always face camera
-            nameTag.quaternion.copy(camera.quaternion);
+            // Névtábla pozícionálása
+            const nameTagGroup = this.mesh.children.find(child => child.children.length > 0 && child.children[0] instanceof THREE.Sprite);
+            if (nameTagGroup) {
+                nameTagGroup.position.y = 1.9 + floatOffset;
+                
+                // Always face camera
+                if (this.nameTag) {
+                    // Smooth scale transition with larger base size
+                    const scaleFactor = 0.05;
+                    this.nameTag.scale.x += (baseScale * 1.2 - this.nameTag.scale.x) * scaleFactor;
+                    this.nameTag.scale.y += (baseScale * 0.3 - this.nameTag.scale.y) * scaleFactor;
+                    
+                    this.nameTag.quaternion.copy(camera.quaternion);
+                }
+            }
         }
 
         return moved;

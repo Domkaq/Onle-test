@@ -143,12 +143,15 @@ button:active {
 .player-count {
     position: fixed;
     top: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
+    left: 20px;
+    background: rgba(44, 48, 56, 0.95);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
     color: white;
     font-size: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
 }
 
 /* Inventory Styles */
@@ -607,4 +610,303 @@ button:active {
 .tooltip-stat-value.tooltip-uncommon { color: #4834d4; }
 .tooltip-stat-value.tooltip-rare { color: #e056fd; }
 .tooltip-stat-value.tooltip-epic { color: #ff9f43; }
-.tooltip-stat-value.tooltip-legendary { color: #f9ca24; } 
+.tooltip-stat-value.tooltip-legendary { color: #f9ca24; }
+
+/* Clicker Game Styles */
+.clicker-hud {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 100;
+    width: 200px;
+}
+
+.clicker-counter {
+    background: rgba(44, 48, 56, 0.95);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    color: white;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.clicker-counter:hover {
+    border-color: rgba(0, 184, 148, 0.3);
+    background: rgba(44, 48, 56, 0.98);
+}
+
+.clicker-counter.clicks {
+    color: #00b894;
+}
+
+.clicker-counter.gold {
+    color: #ffd700;
+}
+
+.clicker-counter .value {
+    font-weight: bold;
+    color: white;
+}
+
+/* Stats display - Moved next to clicker counters */
+.stats-display {
+    background: rgba(44, 48, 56, 0.95);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    color: white;
+    font-family: Arial, sans-serif;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+}
+
+.stats-display > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0;
+    font-size: 0.9rem;
+}
+
+.stats-display .value {
+    font-weight: bold;
+    color: #00b894;
+}
+
+/* Level és XP rendszer - Moved to top center */
+.level-display {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(44, 48, 56, 0.95);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    min-width: 300px;
+}
+
+.level-text {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #00b894;
+}
+
+.xp-bar-container {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    margin-top: 5px;
+}
+
+.xp-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #00b894, #00cec9);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.xp-text {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 5px;
+}
+
+/* Level Up Animation */
+.level-up-animation {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+    font-weight: bold;
+    color: #00b894;
+    text-shadow: 0 0 20px rgba(0, 184, 148, 0.5);
+    animation: levelUpAnim 2s ease-out forwards;
+    z-index: 1001;
+    pointer-events: none;
+}
+
+@keyframes levelUpAnim {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    20% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    80% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -100%) scale(1.5);
+    }
+}
+
+/* Critical Hit Animation */
+.crit-animation {
+    position: absolute;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #00b894;
+    text-shadow: 0 0 10px rgba(0, 184, 148, 0.5);
+    animation: critAnim 1s ease-out forwards;
+    pointer-events: none;
+    z-index: 1001;
+}
+
+@keyframes critAnim {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    20% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    80% {
+        opacity: 1;
+        transform: translate(-50%, -100%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -150%) scale(0.8);
+    }
+}
+
+/* Merchant Styles */
+.merchant-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(44, 48, 56, 0.95);
+    backdrop-filter: blur(12px);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    width: 500px;
+    max-width: 90vw;
+    z-index: 1000;
+    color: #ffffff;
+}
+
+.merchant-dialog-content {
+    padding: 2rem;
+}
+
+.merchant-dialog h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: #00b894;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.merchant-upgrades {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.merchant-upgrade {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.merchant-upgrade:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #00b894;
+}
+
+.upgrade-info {
+    flex: 1;
+}
+
+.upgrade-info h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: #00b894;
+}
+
+.upgrade-info p {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.3rem;
+}
+
+.upgrade-button {
+    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    width: auto;
+}
+
+.upgrade-button:disabled {
+    background: #4a4a4a;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.upgrade-button:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+}
+
+.interaction-prompt {
+    position: fixed;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 1rem;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: promptPulse 2s ease-in-out infinite;
+}
+
+@keyframes promptPulse {
+    0% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.05); }
+    100% { transform: translateX(-50%) scale(1); }
+} 
