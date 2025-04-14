@@ -253,7 +253,8 @@ class ClickerGame {
         clearTimeout(this.comboTimeout);
         
         // Combo időtartam a jelenlegi fejlesztési szint alapján
-        const comboTimeEffect = this.upgrades.comboTime.getEffect(this.upgrades.comboTime.level);
+        const comboTimeLevel = this.upgrades.comboTime.level;
+        const comboTimeEffect = 2000 + (comboTimeLevel - 1) * 500; // Alap 2000ms + szintenként 500ms
         
         // Új időzítő beállítása
         this.comboTimeout = setTimeout(() => {
@@ -398,8 +399,9 @@ class ClickerGame {
         comboValue.textContent = this.combo;
         multiplierValue.textContent = (1 + this.comboMultiplier).toFixed(2);
 
-        // Combo progress bar - most már helyesen definiáljuk a threshold-ot
-        const threshold = this.upgrades.comboThreshold.getEffect(this.upgrades.comboThreshold.level);
+        // Combo progress bar - most már közvetlenül számoljuk a threshold értéket
+        const comboThresholdLevel = this.upgrades.comboThreshold.level;
+        const threshold = Math.max(20, 100 - (comboThresholdLevel - 1) * 10); // Alap 100, szintenként -10, minimum 20
         const progress = (this.combo % threshold) / threshold * 100;
         comboBar.style.width = `${progress}%`;
 
